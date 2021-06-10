@@ -9,13 +9,12 @@ import {Input, BookListUL, Spinner} from './components/lib'
 import {BookRow} from './components/book-row'
 import {client} from './utils/api-client'
 import * as colors from './styles/colors'
+import { useAsync } from 'utils/hooks'
 
 function DiscoverBooksScreen() {
   // 🐨 add state for status ('idle', 'loading', or 'success'), data, and query
-  const [status, setStatus] = useState('idle')
-  const [data, setData] = useState(null)
-  const [query, setQuery] = useState('')
-  const [error, setError] = useState(null)
+  const {data, error, run, isLoading, isError, isSuccess} = useAsync()
+  const [query, setQuery] = useState(null)
   // 🐨 you'll also notice that we don't want to run the search until the
   // user has submitted the form, so you'll need a boolean for that as well
   // 💰 I called it "queried"
@@ -27,24 +26,17 @@ function DiscoverBooksScreen() {
   // so you'll want to check if the user has submitted the form yet and if
   // they haven't then return early (💰 this is what the queried state is for).
   
-  // 🐨 replace these with derived state values based on the status.
-  const isLoading = status === 'loading'
-  const isSuccess = status === 'success'
-  const isError = status === 'error'
+  // 🐨 replace these with derived state values based on the status. -> not useful with useAsync
+  // const isLoading = status === 'loading'
+  // const isSuccess = status === 'success'
+  // const isError = status === 'error'
    
   useEffect(() => {
     if (!queried) {
       return
     }
-    setStatus('loading')
-    client(`books?query=${encodeURIComponent(query)}`).then(responseData => {
-      setData(responseData)
-      setStatus('success')
-    }, errorData => {
-      setError(errorData)
-      setStatus('error')
-    })
-  },[query, queried])
+    run(client(`books?query=${encodeURIComponent(query)}`))
+  },[query, queried, run])
 
 
 
