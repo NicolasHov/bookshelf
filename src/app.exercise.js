@@ -1,12 +1,12 @@
 /** @jsx jsx */
 import {jsx} from '@emotion/core'
 
-import * as React from 'react'
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 // 🐨 you're going to need this:
 import * as auth from 'auth-provider'
 import {AuthenticatedApp} from './authenticated-app'
 import {UnauthenticatedApp} from './unauthenticated-app'
+import {client} from './utils/api-client.exercise'
 
 function App() {
   // 🐨 useState for the user
@@ -14,12 +14,30 @@ function App() {
   // 🐨 create a login function that calls auth.login then sets the user
   const login = form => auth.login(form).then(u => setUser(u))
   // 🐨 create a registration function that does the same as login except for register
-  const registration = form => auth.register(form).then(u => setUser(u))
+  const register = form => auth.register(form).then(u => setUser(u))
   // 🐨 create a logout function that calls auth.logout() and sets the user to null
-  const logout = () => auth.logout()
+  const logout = () => {
+    auth.logout()
+    setUser(null)}
+
+  async function getUser() {  
+    const token = await auth.getToken()
+    if (token) {
+      // we're logged in! Let's go get the user's data:
+      client('me', {token}).then(data => {
+        setUser(data.user)
+      })
+    } else {
+      // we're not logged in. Show the login screen
+    }
+  }
+
+  useEffect(() => {  
+    getUser()
+  },[]) 
   // 🐨 if there's a user, then render the AuthenticatedApp with the user and logout
   // 🐨 if there's not a user, then render the UnauthenticatedApp with login and register
-  return user ? <AuthenticatedApp value={{ user, logout}}/> : <UnauthenticatedApp value={{ login, registration}}/>
+  return user ? <AuthenticatedApp user={user} logout={logout}/> : <UnauthenticatedApp login={login} register={register}/>
   }
 
 export {App}
